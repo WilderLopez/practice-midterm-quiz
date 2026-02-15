@@ -502,28 +502,6 @@ body {
   .chip { font-size: 0.74rem; padding: 6px 12px; }
 }
 
-/* ── SWIPE HINT ── */
-.swipe-hint {
-  position: fixed;
-  bottom: calc(70px + var(--safe-bottom));
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--surface-2);
-  border: 1px solid var(--border-2);
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  color: var(--text-3);
-  z-index: 99;
-  animation: fadeHint 3s ease forwards;
-  pointer-events: none;
-}
-@keyframes fadeHint {
-  0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
-  15% { opacity: 1; transform: translateX(-50%) translateY(0); }
-  75% { opacity: 1; }
-  100% { opacity: 0; }
-}
 </style>
 </head>
 <body>
@@ -612,8 +590,6 @@ body {
   </button>
 </div>
 
-<!-- SWIPE HINT (shown once) -->
-<div class="swipe-hint" id="swipe-hint">← Swipe to navigate →</div>
 
 <script>
 // ============ QUESTION DATA ============
@@ -1057,11 +1033,6 @@ function init() {
   updateStats();
   setupSwipe();
   
-  // Remove swipe hint after shown once
-  setTimeout(() => {
-    const h = document.getElementById('swipe-hint');
-    if (h) h.remove();
-  }, 3500);
 }
 
 function save() {
@@ -1306,30 +1277,8 @@ function jumpTo(idx) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ============ SWIPE ============
-function setupSwipe() {
-  let startX = 0, startY = 0, swiping = false;
-  const threshold = 50;
-  
-  document.addEventListener('touchstart', e => {
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
-    swiping = true;
-  }, { passive: true });
-  
-  document.addEventListener('touchend', e => {
-    if (!swiping) return;
-    swiping = false;
-    const dx = e.changedTouches[0].clientX - startX;
-    const dy = e.changedTouches[0].clientY - startY;
-    
-    // Only trigger horizontal swipe if horizontal distance > vertical
-    if (Math.abs(dx) > threshold && Math.abs(dx) > Math.abs(dy) * 1.5) {
-      if (dx < 0) nav(1);  // swipe left = next
-      else nav(-1);         // swipe right = prev
-    }
-  }, { passive: true });
-}
+// ============ SWIPE (disabled — use Prev/Next buttons) ============
+function setupSwipe() {}
 
 // ============ KEYBOARD ============
 document.addEventListener('keydown', e => {
