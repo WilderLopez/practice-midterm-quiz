@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Practice Midterm — Study Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Fraunces:opsz,wght@9..144,700;9..144,800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0c0d12;
+  --surface: #15171e;
+  --surface-2: #1c1f28;
+  --surface-3: #242733;
+  --accent: #7c6aef;
+  --accent-soft: #a599f5;
+  --accent-glow: rgba(124,106,239,0.15);
+  --correct: #34d399;
+  --correct-bg: rgba(52,211,153,0.10);
+  --wrong: #f87171;
+  --wrong-bg: rgba(248,113,113,0.10);
+  --text: #edeef3;
+  --text-2: #9a9cb5;
+  --text-3: #5c5e73;
+  --border: rgba(255,255,255,0.06);
+  --border-2: rgba(255,255,255,0.10);
+  --r: 12px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+  overflow-x: hidden;
+}
+
+/* ── LAYOUT ── */
+.app {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 16px;
+  padding-bottom: calc(80px + var(--safe-bottom));
+}
+
+/* ── HEADER ── */
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(12,13,18,0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  margin: 0 -16px;
+}
+.top-bar-inner {
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.brand {
+  font-family: 'Fraunces', serif;
+  font-weight: 800;
+  font-size: 1.15rem;
+  background: linear-gradient(135deg, var(--accent-soft), #d4d0f8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  white-space: nowrap;
+}
+.top-stats {
+  display: flex;
+  gap: 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.top-stats .ts { display: flex; align-items: center; gap: 4px; }
+.top-stats .ts .dot { width: 7px; height: 7px; border-radius: 50%; }
+.dot-g { background: var(--correct); }
+.dot-r { background: var(--wrong); }
+.dot-a { background: var(--accent); }
+
+/* ── PROGRESS BAR (below top-bar) ── */
+.progress-track {
+  height: 3px;
+  background: var(--surface);
+  margin: 0 -16px;
+  position: relative;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-soft));
+  transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
+  width: 0%;
+}
+
+/* ── TOOLBAR ── */
+.toolbar {
+  display: flex;
+  gap: 6px;
+  padding: 12px 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.toolbar::-webkit-scrollbar { display: none; }
+
+.chip {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border-2);
+  background: var(--surface);
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.chip:active { transform: scale(0.96); }
+.chip.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.chip svg { width: 14px; height: 14px; flex-shrink: 0; }
+.chip select {
+  appearance: none;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  padding-right: 2px;
+  outline: none;
+}
+.chip select option { background: var(--surface-2); color: var(--text); }
+
+/* ── QUESTION COUNTER ── */
+.q-counter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0 10px;
+  font-size: 0.8rem;
+  color: var(--text-3);
+}
+.q-counter .current-pos { font-weight: 600; color: var(--text-2); }
+
+/* ── QUESTION CARD ── */
+.q-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 22px 18px;
+  margin-bottom: 14px;
+  animation: slideIn 0.25s ease-out;
+  touch-action: pan-y;
+}
+@keyframes slideIn { 
+  from { opacity: 0; transform: translateX(20px); } 
+  to { opacity: 1; transform: translateX(0); } 
+}
+.q-card.slide-out-left { animation: slideOutLeft 0.2s ease-in forwards; }
+.q-card.slide-out-right { animation: slideOutRight 0.2s ease-in forwards; }
+@keyframes slideOutLeft { to { opacity: 0; transform: translateX(-30px); } }
+@keyframes slideOutRight { to { opacity: 0; transform: translateX(30px); } }
+
+.q-card.answered-correct { border-color: rgba(52,211,153,0.4); }
+.q-card.answered-wrong { border-color: rgba(248,113,113,0.4); }
+
+.q-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.q-badge .q-id {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--accent-soft);
+  background: var(--accent-glow);
+  padding: 3px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.3px;
+}
+.q-badge .q-cat {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.q-badge .q-multi {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #fbbf24;
+  background: rgba(251,191,36,0.12);
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+.q-text {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--text);
+  margin-bottom: 20px;
+}
+.q-text .img-note {
+  display: block;
+  margin-top: 10px;
+  font-size: 0.82rem;
+  color: var(--accent-soft);
+  font-style: italic;
+  padding: 8px 12px;
+  background: var(--accent-glow);
+  border-radius: 8px;
+  border-left: 3px solid var(--accent);
+}
+
+/* ── OPTIONS ── */
+.options { display: flex; flex-direction: column; gap: 8px; }
+
+.opt {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border-2);
+  background: var(--surface-2);
+  cursor: pointer;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.opt:active:not(.disabled) { transform: scale(0.985); }
+.opt:hover:not(.disabled) { border-color: var(--accent); background: var(--accent-glow); }
+
+.opt .marker {
+  flex-shrink: 0;
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  border: 2px solid var(--text-3);
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+  margin-top: 1px;
+  font-size: 0;
+}
+.opt .marker svg { display: none; width: 12px; height: 12px; }
+
+.opt .opt-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-3);
+  min-width: 16px;
+  text-align: center;
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+.opt .opt-text { font-size: 0.92rem; line-height: 1.55; color: var(--text); flex: 1; }
+
+/* Selected (multi-select before submit) */
+.opt.selected { border-color: var(--accent); background: var(--accent-glow); }
+.opt.selected .marker { border-color: var(--accent); background: var(--accent); }
+.opt.selected .marker svg { display: block; }
+
+/* Correct */
+.opt.is-correct { border-color: var(--correct); background: var(--correct-bg); }
+.opt.is-correct .marker { border-color: var(--correct); background: var(--correct); }
+.opt.is-correct .marker svg { display: block; }
+
+/* Wrong */
+.opt.is-wrong { border-color: var(--wrong); background: var(--wrong-bg); }
+.opt.is-wrong .marker { border-color: var(--wrong); background: var(--wrong); }
+.opt.is-wrong .marker svg { display: block; }
+
+.opt.disabled { pointer-events: none; opacity: 0.6; }
+.opt.is-correct.disabled, .opt.is-wrong.disabled { opacity: 1; }
+/* Dim non-selected correct/wrong disabled opts */
+.opt.disabled:not(.is-correct):not(.is-wrong) { opacity: 0.45; }
+
+/* Multi-select submit button */
+.multi-submit {
+  margin-top: 10px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.multi-submit:active { transform: scale(0.97); }
+.multi-submit:disabled { opacity: 0.4; cursor: default; }
+
+/* ── EXPLANATION ── */
+.explanation {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: rgba(124,106,239,0.07);
+  border-left: 3px solid var(--accent);
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: var(--text-2);
+  display: none;
+}
+.explanation.show { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* ── GRID VIEW ── */
+.grid-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(12,13,18,0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 200;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 16px;
+}
+.grid-overlay.show { display: flex; }
+.grid-panel {
+  width: 100%;
+  max-width: 720px;
+  max-height: 70dvh;
+  background: var(--surface);
+  border-radius: 16px 16px 0 0;
+  padding: 16px 16px calc(16px + var(--safe-bottom));
+  overflow-y: auto;
+  animation: slideUp 0.3s ease-out;
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.grid-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.grid-panel-header h3 { font-size: 0.95rem; font-weight: 700; }
+.grid-close {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: var(--surface-3);
+  color: var(--text);
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.grid-nav {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+  gap: 6px;
+}
+.grid-cell {
+  aspect-ratio: 1;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-2);
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.grid-cell:active { transform: scale(0.93); }
+.grid-cell.current { border-color: var(--accent); background: var(--accent-glow); color: var(--accent-soft); }
+.grid-cell.done-correct { background: var(--correct); color: #fff; border-color: var(--correct); }
+.grid-cell.done-wrong { background: var(--wrong); color: #fff; border-color: var(--wrong); }
+
+/* ── BOTTOM NAV ── */
+.nav-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(12,13,18,0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  padding: 10px 16px;
+  padding-bottom: calc(10px + var(--safe-bottom));
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  z-index: 100;
+}
+.nav-btn {
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 10px 24px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.nav-btn:active { transform: scale(0.96); }
+.nav-btn.primary { background: var(--accent); color: #fff; }
+.nav-btn.secondary { background: var(--surface-2); color: var(--text-2); border: 1px solid var(--border-2); }
+.nav-btn:disabled { opacity: 0.35; cursor: default; transform: none; }
+.nav-pos {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-3);
+  min-width: 60px;
+  text-align: center;
+}
+
+/* ── RESULTS ── */
+.results {
+  text-align: center;
+  padding: 48px 16px;
+  animation: fadeIn 0.5s ease;
+}
+.score-ring {
+  width: 140px; height: 140px;
+  border-radius: 50%;
+  border: 5px solid var(--accent);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  margin: 0 auto 20px;
+  position: relative;
+}
+.score-ring .pct { font-family: 'Fraunces', serif; font-size: 2.4rem; font-weight: 800; }
+.score-ring .of { font-size: 0.8rem; color: var(--text-2); }
+.results h2 { font-family: 'Fraunces', serif; font-size: 1.3rem; margin-bottom: 6px; }
+.results .sub { color: var(--text-2); font-size: 0.9rem; margin-bottom: 28px; }
+.cat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+  text-align: left;
+}
+.cat-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.cat-item .cat-name { font-size: 0.75rem; color: var(--text-3); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+.cat-item .cat-score { font-size: 1rem; font-weight: 700; }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-3);
+}
+.empty-state svg { margin-bottom: 12px; opacity: 0.4; }
+.empty-state p { font-size: 0.9rem; }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 4px; }
+
+/* ── MOBILE ── */
+@media (max-width: 480px) {
+  .brand { font-size: 1rem; }
+  .top-stats { gap: 10px; font-size: 0.75rem; }
+  .q-card { padding: 18px 14px; }
+  .q-text { font-size: 0.94rem; }
+  .opt { padding: 11px 12px; gap: 10px; }
+  .opt .opt-text { font-size: 0.88rem; }
+  .nav-btn { padding: 10px 20px; font-size: 0.82rem; }
+  .chip { font-size: 0.74rem; padding: 6px 12px; }
+}
+
+/* ── SWIPE HINT ── */
+.swipe-hint {
+  position: fixed;
+  bottom: calc(70px + var(--safe-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  color: var(--text-3);
+  z-index: 99;
+  animation: fadeHint 3s ease forwards;
+  pointer-events: none;
+}
+@keyframes fadeHint {
+  0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  75% { opacity: 1; }
+  100% { opacity: 0; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="top-bar">
+  <div class="top-bar-inner">
+    <div class="brand">Practice Midterm</div>
+    <div class="top-stats">
+      <div class="ts"><div class="dot dot-g"></div><span id="s-correct">0</span></div>
+      <div class="ts"><div class="dot dot-r"></div><span id="s-wrong">0</span></div>
+      <div class="ts"><div class="dot dot-a"></div><span id="s-pct">0%</span></div>
+    </div>
+  </div>
+</div>
+<div class="progress-track"><div class="progress-fill" id="progress"></div></div>
+
+<div class="app" id="app">
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <div class="chip active" id="chip-all" onclick="filterQ('all')">All</div>
+    <div class="chip" id="chip-wrong" onclick="filterQ('wrong')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      Wrong
+    </div>
+    <div class="chip" id="chip-unanswered" onclick="filterQ('unanswered')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+      Unanswered
+    </div>
+    <div class="chip" onclick="openGrid()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Grid
+    </div>
+    <div class="chip" onclick="shuffleQ()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+      Shuffle
+    </div>
+    <div class="chip" style="border-color:var(--wrong); color:var(--wrong);" onclick="resetQuiz()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 105.73-11.28L1 10"/></svg>
+      Reset
+    </div>
+    <div class="chip">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/></svg>
+      <select id="cat-filter" onchange="filterByCat(this.value)">
+        <option value="all">Category</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- QUESTION AREA -->
+  <div id="quiz-area"></div>
+
+  <!-- RESULTS -->
+  <div class="results" id="results" style="display:none;">
+    <div class="score-ring">
+      <div class="pct" id="r-pct">0%</div>
+      <div class="of" id="r-of">0/82</div>
+    </div>
+    <h2>Quiz Complete!</h2>
+    <p class="sub">Review your answers below or reset to try again.</p>
+    <div class="cat-grid" id="cat-results"></div>
+  </div>
+</div>
+
+<!-- GRID OVERLAY -->
+<div class="grid-overlay" id="grid-overlay" onclick="closeGrid(event)">
+  <div class="grid-panel" onclick="event.stopPropagation()">
+    <div class="grid-panel-header">
+      <h3>Question Navigator</h3>
+      <button class="grid-close" onclick="closeGrid()">✕</button>
+    </div>
+    <div class="grid-nav" id="grid-nav"></div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="nav-bar">
+  <button class="nav-btn secondary" id="nav-prev" onclick="nav(-1)">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+    Prev
+  </button>
+  <div class="nav-pos" id="nav-counter">1 / 82</div>
+  <button class="nav-btn primary" id="nav-next" onclick="nav(1)">
+    Next
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+  </button>
+</div>
+
+<!-- SWIPE HINT (shown once) -->
+<div class="swipe-hint" id="swipe-hint">← Swipe to navigate →</div>
+
+<script>
+// ============ QUESTION DATA ============
+const questions = [
+  {
+    id:1, cat:"Endocrine", q:"The presence of which of the following would be supportive of the diagnosis of pheochromocytoma?",
+    opts:["Improved muscle strength after pyridostigmine administration","Positive findings of a renal mass on CT scan of abdomen and pelvis","Low levels of metanephrines in serum","Elevated metanephrines in serum and urine"],
+    ans:3, exp:"Pheochromocytoma is a catecholamine-secreting tumor of the adrenal medulla. Elevated metanephrines in serum and urine are the most sensitive and specific test for diagnosis."
+  },
+  {
+    id:2, cat:"Pulmonary", q:"You order a CXR (P-A view) for a patient with dyspnea and decreased breath sounds on auscultation. Based on the radiographic image, you would diagnose:<span class='img-note'>📷 Ver imagen en Pregunta 2 del documento PDF.</span>",
+    opts:["Right lung pneumonia","Right pleural effusion","Pericardial effusion","Right pneumothorax","Left pleural effusion"],
+    ans:1, exp:"The CXR shows blunting of the right costophrenic angle with a meniscus sign, classic for right pleural effusion."
+  },
+  {
+    id:3, cat:"Cardiology", q:"The 2D-echocardiogram reads EF= 30 - 35%. The FNP would document this as:",
+    opts:["Heart failure with reduced ejection fraction","Diastolic heart failure","NYHA Class-III","Right heart failure","Heart failure with preserved ejection fraction"],
+    ans:0, exp:"EF < 40% = Heart failure with reduced ejection fraction (HFrEF). HFpEF is EF ≥ 50%. EF 40-49% is HF with mildly reduced EF."
+  },
+  {
+    id:4, cat:"Cardiology", q:"Entresto was the #1 FDA approved combined medication for the treatment of HFrEF or systolic heart failure. However, it should not be administered concomitantly with: (select only 1 answer)",
+    opts:["Beta blocker","Antibiotic","ACEI","Antihistamine medication"],
+    ans:2, exp:"Entresto (sacubitril/valsartan) contains an ARB (valsartan). Combining with an ACEI causes life-threatening angioedema. Must wait 36 hours after stopping ACEI before starting Entresto."
+  },
+  {
+    id:5, cat:"Endocrine", q:"All of the following apply to Cushing syndrome except:",
+    opts:["Hypercortisolism","Moon face and buffalo hump","Centripetal body fat","Low cortisol levels in serum and urine"],
+    ans:3, exp:"Cushing syndrome is caused by excess cortisol (hypercortisolism). All features listed are classic EXCEPT low cortisol levels — levels are elevated."
+  },
+  {
+    id:6, cat:"Cardiology", q:"NYHA Class-III is characterized by: (select only 1 answer)",
+    opts:["Asymptomatic with ordinary physical activities","Slight limitation of activities","Marked limitation of activities","Symptoms occur at rest"],
+    ans:2, exp:"NYHA Class III = marked limitation of physical activity; comfortable at rest but less-than-ordinary activity causes symptoms."
+  },
+  {
+    id:7, cat:"Pulmonary", q:"Bacteria associated with \"currant jelly\" sputum:",
+    opts:["Streptococcus pneumoniae","Klebsiella pneumoniae","Pseudomonas aeruginosa","Legionella pneumophila"],
+    ans:1, exp:"Klebsiella pneumoniae produces thick, bloody (currant jelly) sputum. Common in alcoholics and debilitated patients."
+  },
+  {
+    id:8, cat:"Pulmonary", q:"According to GINA 2021, all of the following are considered SABA alternatives for Step 1 Asthma management except:",
+    opts:["Low dose ICS-formoterol prn","SABA + low dose ICS taken together whenever SABA is used","LAMA","ICS alone whenever SABA is used"],
+    ans:3, exp:"GINA 2021 Step 1 preferred: low-dose ICS-formoterol prn. Alternatives: SABA + low-dose ICS together, or LAMA as add-on. ICS alone (without SABA) is not a Step 1 alternative."
+  },
+  {
+    id:9, cat:"Pulmonary", q:"Regarding the treatment for Tuberculosis, the four initial drugs recommended for the initial/intensive therapy phase which last for 8 weeks are known as RIPE. The letter <strong>I</strong> stands for:",
+    opts:["Ibuprofen","Immunoglobulin","Isoniazid","Ipratropium"],
+    ans:2, exp:"RIPE: Rifampin, Isoniazid, Pyrazinamide, Ethambutol. The 'I' is Isoniazid."
+  },
+  {
+    id:10, cat:"Endocrine", q:"Sulfonylurea patient education should include: (select only 1 answer)",
+    opts:["No risk of hypoglycemia","Carbohydrate management at home because sulfonylureas carry a risk of hypoglycemia","Constipation is the most common side effect","GI disturbance (nausea, bloating, metallic taste, diarrhea)"],
+    ans:1, exp:"Sulfonylureas stimulate insulin secretion → risk of hypoglycemia. Patients should manage carbohydrate intake. GI side effects (option D) are classic for metformin, not sulfonylureas."
+  },
+  {
+    id:11, cat:"Endocrine/Ophthalmology", q:"The patient is an adult obese female with a long standing history of polyuria, polydipsia, weight loss, and peripheral neuropathy with right plantar ulcers that complaints of progressive visual loss and diplopia as well as recurrent vulvar candidiasis. She is afebrile with regular pulse, and normotensive. Cervical acanthosis nigricans is present. Based on the information provided, which of the following funduscopic views could correspond to this case?<span class='img-note'>📷 Ver imagen en Pregunta 11 del documento PDF.</span>",
+    opts:["A","B","C"],
+    ans:2, exp:"This patient has long-standing uncontrolled diabetes (polyuria, polydipsia, neuropathy, ulcers, candidiasis, acanthosis nigricans). Image C shows proliferative diabetic retinopathy with hemorrhages, hard exudates, cotton wool spots, and neovascularization."
+  },
+  {
+    id:12, cat:"ENT", q:"The diagnosis of infectious mononucleosis is confirmed by which of the following? (select 1 answer)",
+    opts:["Cold agglutinins","ASO titer","Monospot test (Heterophile antibody test)","Mycoplasma IgM titer"],
+    ans:2, exp:"Monospot test (heterophile antibody test) is the standard confirmatory test for infectious mononucleosis caused by EBV."
+  },
+  {
+    id:13, cat:"Pulmonary", q:"What do workers exposed to cotton, hemp, and flax dust develop? (select only 1 answer)",
+    opts:["Siderosis","Byssinosis","Asbestosis","Berylliosis"],
+    ans:1, exp:"Byssinosis = cotton/hemp/flax dust exposure. Siderosis = iron. Asbestosis = asbestos. Berylliosis = beryllium."
+  },
+  {
+    id:14, cat:"Pulmonary", q:"Positive PPD results: A reaction of ≥ 5mm of induration is considered positive for: (Select all that apply)",
+    opts:["Recent contact with a person with active TB infection","HIV positive patients","All adults with no known risk factors for TB","Immigrants from high-prevalence countries","Residents and employees of high-risk congregate settings (prisons, nursing homes, hospitals, homeless shelters)","Organ transplant recipients"],
+    ans:[0,1,5], multi:true, exp:"≥5mm positive for: HIV+, recent TB contacts, organ transplant recipients, and patients on immunosuppressives. ≥10mm: immigrants from high-prevalence countries, residents of congregate settings. ≥15mm: persons with no known risk factors."
+  },
+  {
+    id:15, cat:"ENT", q:"A patient with acute otitis media unresponsive to high dose amoxicillin should be treated with: (select only 1 answer)",
+    opts:["Ciprodex otic drops","Tetracycline","Azithromycin","Amoxicillin-clavulanate"],
+    ans:3, exp:"For AOM failing high-dose amoxicillin, amoxicillin-clavulanate (Augmentin) is the recommended second-line treatment, covering beta-lactamase producing organisms."
+  },
+  {
+    id:16, cat:"Ophthalmology", q:"The cup-to-disc ratio is primarily used to screen for, diagnose, and monitor which of the following conditions?",
+    opts:["Pterygium","Open-angle glaucoma","Diabetic retinopathy","Macular degeneration"],
+    ans:1, exp:"Cup-to-disc ratio ≥ 0.5 or asymmetry between eyes is a key finding in open-angle glaucoma screening and monitoring."
+  },
+  {
+    id:17, cat:"Cardiology", q:"The most common type of cardiomyopathy in the US is: (select only 1 answer)",
+    opts:["Dilated cardiomyopathy","Restrictive cardiomyopathy","Hypertrophic cardiomyopathy","Stress-related cardiomyopathy"],
+    ans:0, exp:"Dilated cardiomyopathy is the most common form in the US, often caused by idiopathic, viral, or alcoholic etiologies."
+  },
+  {
+    id:18, cat:"Ophthalmology", q:"A 14-year-old boy presents with bilateral red, itchy, and watery eyes. Both eyes are affected. Visual acuity is 20/20 and there is no pain. He says it gets worse during the summer months. What is the most likely diagnosis? (select only 1 answer)",
+    opts:["Viral conjunctivitis","Bacterial conjunctivitis","Allergic conjunctivitis","Acute angle-closure glaucoma"],
+    ans:2, exp:"Bilateral, itchy, watery eyes that worsen seasonally = allergic conjunctivitis. Viral = watery + preauricular lymphadenopathy. Bacterial = purulent discharge."
+  },
+  {
+    id:19, cat:"Cardiology", q:"A patient presents to the clinic with a blood pressure reading of 178/100 mmHg. What is the most appropriate initial action?",
+    opts:["Immediate referral to the emergency department","Re-measure blood pressure after the patient has rested for 5 minutes","Start antihypertensive medication immediately","Order a 24-hour ambulatory blood pressure monitoring"],
+    ans:1, exp:"Single elevated BP reading requires re-measurement after rest. Cannot diagnose or treat based on one reading unless there are signs of hypertensive emergency."
+  },
+  {
+    id:20, cat:"ENT", q:"A 10-year-old child presents with sore throat, fever of 101.5°F, tonsillar exudates, and tender anterior cervical lymphadenopathy. What is the most appropriate next step?",
+    opts:["Prescribe antibiotics immediately","Perform rapid strep test","Order a throat culture only","Advise symptomatic treatment and follow up in 1 week"],
+    ans:1, exp:"Child with sore throat + fever + tonsillar exudates + anterior LAD = high Centor score. Rapid strep test is the appropriate next step to confirm GAS pharyngitis before prescribing antibiotics."
+  },
+  {
+    id:21, cat:"Pulmonary", q:"Which of the following best describes the pathophysiology of asthma?",
+    opts:["Irreversible airway obstruction due to alveolar destruction","Chronic airway inflammation with reversible bronchoconstriction","Recurrent pulmonary infections leading to bronchiectasis","Progressive fibrosis of the lung parenchyma"],
+    ans:1, exp:"Asthma = chronic airway inflammation + reversible bronchoconstriction + airway hyperresponsiveness. Unlike COPD which is irreversible."
+  },
+  {
+    id:22, cat:"Cardiology", q:"After reviewing the 12-Lead ECG for a patient with no current symptoms but with medical history significant for controlled HTN and previous percutaneous coronary angioplasty for which he takes lisinopril 10 mg PO daily, metoprolol-XL 100 mg PO daily, and HCTZ 12.5 PO daily, the FNP should:<span class='img-note'>📷 Ver imagen (ECG) en Pregunta 22 del documento PDF.</span>",
+    opts:["Continue current medical therapy and reassure the patient","Refer to cardiology for evaluation of possible prior myocardial infarction","Order a STAT cardiac catheterization","Increase the dose of metoprolol to improve heart rate control"],
+    ans:1, exp:"ECG shows signs of prior MI (Q waves or ST changes) in a patient with history of coronary intervention. Referral to cardiology for further evaluation is appropriate."
+  },
+  {
+    id:23, cat:"Cardiology", q:"The 12-Lead ECG below shows:<span class='img-note'>📷 Ver imagen (ECG) en Pregunta 23 del documento PDF.</span>",
+    opts:["Atrial flutter","Sinus bradycardia with 1st degree AV block","Normal sinus rhythm","Atrial fibrillation"],
+    ans:1, exp:"ECG shows sinus bradycardia (HR <60) with prolonged PR interval (>200ms) = 1st degree AV block."
+  },
+  {
+    id:24, cat:"Pulmonary", q:"Sputum that is described as 'rusty' is most associated with which organism?",
+    opts:["Pseudomonas aeruginosa","Staphylococcus aureus","Streptococcus pneumoniae","Mycoplasma pneumoniae"],
+    ans:2, exp:"Rusty sputum = Streptococcus pneumoniae. Currant jelly = Klebsiella. Green = Pseudomonas. No sputum/dry cough = atypicals like Mycoplasma."
+  },
+  {
+    id:25, cat:"Ophthalmology", q:"Which of the following is the most common type of conjunctivitis?",
+    opts:["Bacterial","Gonococcal","Viral","Chlamydial"],
+    ans:2, exp:"Viral conjunctivitis (most commonly adenovirus) is the most prevalent form of conjunctivitis."
+  },
+  {
+    id:26, cat:"Ophthalmology", q:"A patient presents with complaints of left eye pain for the last 2 days and no visual changes or fevers. Based on the information provided, what is your most likely diagnosis?<span class='img-note'>📷 Ver imagen en Pregunta 26 del documento PDF.</span>",
+    opts:["Chalazion","Hordeolum (stye)","Blepharitis","Preseptal cellulitis"],
+    ans:1, exp:"Acute, painful, localized swelling of the eyelid = hordeolum (stye). Chalazion is typically non-tender. Blepharitis affects the lid margin diffusely."
+  },
+  {
+    id:27, cat:"Ophthalmology", q:"What visual acuity result would warrant referral to ophthalmology?",
+    opts:["20/20 in both eyes","20/30 with correction in both eyes","20/40 or worse in any eye","20/25 in both eyes"],
+    ans:2, exp:"Visual acuity 20/40 or worse warrants ophthalmology referral per screening guidelines."
+  },
+  {
+    id:28, cat:"Ophthalmology", q:"Which diagnostic test is most useful for confirming a corneal abrasion?",
+    opts:["Tonometry","Fluorescein stain under Wood's lamp","Visual field testing","Fundoscopy"],
+    ans:1, exp:"Fluorescein stain with Wood's lamp (cobalt blue) illumination reveals corneal epithelial defects — the gold standard for corneal abrasion diagnosis."
+  },
+  {
+    id:29, cat:"Ophthalmology", q:"The black-colored arrow in the imagen below is representative of:<span class='img-note'>📷 Ver imagen en Pregunta 29 del documento PDF.</span>",
+    opts:["Macula","Optic disc","Optic cup","Fovea"],
+    ans:2, exp:"The arrow points to the central depression within the optic disc, which is the optic cup. The cup-to-disc ratio is important in glaucoma screening."
+  },
+  {
+    id:30, cat:"Ophthalmology", q:"A patient presents with a sudden onset of flashing lights and floaters in the right eye. What is the most important diagnosis to rule out?",
+    opts:["Conjunctivitis","Open-angle glaucoma","Retinal detachment","Cataract"],
+    ans:2, exp:"Sudden flashing lights + floaters = classic symptoms of retinal detachment. This is an ophthalmologic emergency requiring urgent referral."
+  },
+  {
+    id:31, cat:"Ophthalmology", q:"The three images below belong to a patient with chronic hypertension. Which of the images presented demonstrates the presence of hard exudates and cotton wool spots?<span class='img-note'>📷 Ver imágenes A, B, C en Pregunta 31 del documento PDF.</span>",
+    opts:["A","B","C"],
+    ans:1, exp:"Image B shows hard exudates (yellow-white lipid deposits) and cotton wool spots (soft, fluffy white lesions from nerve fiber infarction) consistent with hypertensive retinopathy."
+  },
+  {
+    id:32, cat:"Cardiology", q:"What medication is most associated with a dry, persistent cough as a side effect?",
+    opts:["Losartan","Amlodipine","Lisinopril","Metoprolol"],
+    ans:2, exp:"ACE inhibitors (lisinopril, enalapril, etc.) cause dry cough in ~10-15% of patients due to bradykinin accumulation. Switch to ARB (losartan) if intolerable."
+  },
+  {
+    id:33, cat:"Cardiology", q:"According to the AHA/ACC guidelines, the blood pressure threshold for diagnosing Stage 1 hypertension is:",
+    opts:["120-129/<80","130-139/80-89","≥140/≥90","≥160/≥100"],
+    ans:1, exp:"Per 2017 AHA/ACC guidelines: Normal <120/<80, Elevated 120-129/<80, Stage 1 HTN 130-139/80-89, Stage 2 HTN ≥140/≥90."
+  },
+  {
+    id:34, cat:"Pulmonary", q:"COPD Gold-B classification indicates:",
+    opts:["Low risk, less symptoms","Low risk, more symptoms","High risk, less symptoms","High risk, more symptoms"],
+    ans:1, exp:"GOLD COPD: A = low risk/less symptoms, B = low risk/more symptoms, C = high risk/less symptoms, D = high risk/more symptoms."
+  },
+  {
+    id:35, cat:"Endocrine", q:"Which of the following is the most appropriate initial screening test for thyroid dysfunction?",
+    opts:["Free T4","Total T3","TSH","Thyroid ultrasound"],
+    ans:2, exp:"TSH is the most sensitive initial screening test for thyroid dysfunction. Abnormal TSH triggers further testing with free T4 and/or T3."
+  },
+  {
+    id:36, cat:"Endocrine", q:"A patient with newly diagnosed hypothyroidism should be started on:",
+    opts:["Methimazole","Liothyronine (T3)","Levothyroxine (T4)","Propylthiouracil (PTU)"],
+    ans:2, exp:"Levothyroxine (T4) is the standard first-line treatment for hypothyroidism. Methimazole and PTU are for hyperthyroidism."
+  },
+  {
+    id:37, cat:"Pulmonary", q:"Hamman's sign (crunching sound heard with heartbeat) is associated with:",
+    opts:["Pleural effusion","Pneumomediastinum","Pericardial effusion","Tension pneumothorax"],
+    ans:1, exp:"Hamman's sign (mediastinal crunch) = crunching/clicking sound synchronous with heartbeat, heard in pneumomediastinum."
+  },
+  {
+    id:38, cat:"Cardiology", q:"An irregularly irregular pulse is most characteristic of:",
+    opts:["Sinus tachycardia","Atrial flutter","Atrial fibrillation","Second-degree AV block"],
+    ans:2, exp:"Atrial fibrillation = irregularly irregular rhythm (both rate and rhythm are irregular). Atrial flutter is usually regular."
+  },
+  {
+    id:39, cat:"Ophthalmology", q:"A patient with history of HTN, presents to the clinic complaining of severe headaches, eye pain, and very blurry vision. Funduscopic examination appears below. The FNP would document this finding as:<span class='img-note'>📷 Ver imagen en Pregunta 39 del documento PDF.</span>",
+    opts:["Papilledema","Macular degeneration","Glaucomatous cupping","Normal fundoscopic exam"],
+    ans:0, exp:"Papilledema = swelling of the optic disc due to increased intracranial pressure. Seen with HTN emergency, intracranial mass, idiopathic intracranial hypertension."
+  },
+  {
+    id:40, cat:"Endocrine", q:"A patient presents with weight gain, fatigue, constipation, cold intolerance, and dry skin. Labs show elevated TSH and low free T4. What is the diagnosis?",
+    opts:["Graves' disease","Hashimoto's thyroiditis/Hypothyroidism","Cushing syndrome","Addison's disease"],
+    ans:1, exp:"Elevated TSH + low free T4 + symptoms of cold intolerance, weight gain, fatigue, constipation = primary hypothyroidism (most commonly Hashimoto's thyroiditis)."
+  },
+  {
+    id:41, cat:"Pulmonary", q:"Which type of lung cancer is most strongly associated with cigarette smoking?",
+    opts:["Adenocarcinoma","Large cell carcinoma","Squamous cell carcinoma","Mesothelioma"],
+    ans:2, exp:"Squamous cell carcinoma has the strongest association with smoking. Adenocarcinoma is the most common type overall but is also seen in non-smokers. Mesothelioma is associated with asbestos."
+  },
+  {
+    id:42, cat:"Pulmonary", q:"An adult male patient with tall body habitus, presents with shortness of breath. Radiographic image appears below. The FNP would:<span class='img-note'>📷 Ver imagen (CXR) en Pregunta 42 del documento PDF.</span>",
+    opts:["Order an echocardiogram","Emergently refer the patient for chest tube placement","Start albuterol nebulizer","Prescribe amoxicillin and follow up in 10 days"],
+    ans:1, exp:"Tall, thin male with sudden dyspnea + CXR showing absent lung markings = spontaneous pneumothorax. Requires emergent chest tube placement/referral."
+  },
+  {
+    id:43, cat:"Cardiology", q:"Which of the following is a modifiable risk factor for coronary artery disease?",
+    opts:["Age","Male sex","Family history of premature CAD","Hyperlipidemia"],
+    ans:3, exp:"Hyperlipidemia is modifiable through diet, exercise, and medications. Age, sex, and family history are non-modifiable risk factors."
+  },
+  {
+    id:44, cat:"Pulmonary", q:"A 12 year old child with history of intermittent asthma presents to the clinic after a nebulizer treatment at the ER over the weekend. Based on the GINA 2021 guideline, which of the following is the most appropriate long-term management for this patient?",
+    opts:["Step 1: Low-dose ICS-formoterol as needed","Step 2: Daily low-dose ICS + SABA as needed","Step 3: Low-dose ICS-LABA maintenance","Step 4: Medium-dose ICS-LABA"],
+    ans:0, exp:"GINA 2021 Step 1 for intermittent asthma: low-dose ICS-formoterol as needed (preferred track). This provides both anti-inflammatory and bronchodilator relief."
+  },
+  {
+    id:45, cat:"Cardiology", q:"The most common cause of heart failure in the US is:",
+    opts:["Valvular heart disease","Hypertension","Coronary artery disease","Myocarditis"],
+    ans:2, exp:"Coronary artery disease (ischemic cardiomyopathy) is the most common cause of heart failure in the US, followed by hypertension."
+  },
+  {
+    id:46, cat:"Ophthalmology", q:"The Amsler grid is primarily used to detect:",
+    opts:["Glaucoma","Cataracts","Macular degeneration","Retinal detachment"],
+    ans:2, exp:"The Amsler grid detects central visual field distortion (metamorphopsia) associated with macular degeneration."
+  },
+  {
+    id:47, cat:"ENT", q:"Weber test lateralizes to the affected ear and Rinne test shows bone conduction > air conduction (BC > AC) in the affected ear. This pattern is consistent with:",
+    opts:["Sensorineural hearing loss","Conductive hearing loss","Mixed hearing loss","Normal hearing"],
+    ans:1, exp:"Conductive hearing loss: Weber lateralizes TO affected ear, Rinne shows BC > AC in affected ear. Sensorineural: Weber lateralizes AWAY from affected ear, Rinne AC > BC."
+  },
+  {
+    id:48, cat:"Cardiology", q:"Which heart sound is associated with heart failure and considered pathological in adults?",
+    opts:["S1","S2","S3","S4"],
+    ans:2, exp:"S3 gallop = pathological in adults, associated with volume overload and heart failure (rapid ventricular filling). S4 can indicate decreased ventricular compliance."
+  },
+  {
+    id:49, cat:"Endocrine", q:"Which of the following medications for diabetes carries the highest risk of hypoglycemia?",
+    opts:["Metformin","Empagliflozin (SGLT2 inhibitor)","Glipizide (sulfonylurea)","Sitagliptin (DPP-4 inhibitor)"],
+    ans:2, exp:"Sulfonylureas (glipizide, glyburide, glimepiride) stimulate insulin secretion regardless of glucose levels → highest hypoglycemia risk among oral diabetes medications."
+  },
+  {
+    id:50, cat:"Cardiology", q:"The EKG below shows:<span class='img-note'>📷 Ver imagen (EKG) en Pregunta 50 del documento PDF.</span>",
+    opts:["1st degree AV block","2nd degree AV block Type I (Wenckebach)","2nd degree AV block Type II (Mobitz II)","3rd degree (complete) AV block"],
+    ans:2, exp:"Mobitz Type II: Regular P-P intervals with sudden dropped QRS complexes WITHOUT progressive PR prolongation. More serious than Type I, may need pacemaker."
+  },
+  {
+    id:51, cat:"Cardiology", q:"Yodaisy is an adult female patient that you follow for essential hypertension well-controlled with Lisinopril 10 mg PO daily. She now presents to the clinic with new onset of nervousness and palpitations. She admits to having diarrhea for the last 3 days. She is not sleeping well, feels weak and have noticed some weight loss within the last 2 weeks. After brief analysis of the 12-Lead EKG below, you will:<span class='img-note'>📷 Ver imagen (EKG) en Pregunta 51 del documento PDF.</span>",
+    opts:["Reassure the patient and continue current medications","Order TSH and refer to cardiology for atrial fibrillation management","Increase lisinopril and add metoprolol","Prescribe anxiolytic medication for nervousness"],
+    ans:1, exp:"Nervousness, palpitations, diarrhea, insomnia, weight loss = hyperthyroid symptoms. EKG shows atrial fibrillation. Order TSH + refer cardiology for A-fib management."
+  },
+  {
+    id:52, cat:"ENT", q:"Centor criteria are used to assess the likelihood of:",
+    opts:["Acute otitis media","Group A streptococcal pharyngitis","Infectious mononucleosis","Peritonsillar abscess"],
+    ans:1, exp:"Centor criteria (modified): fever, tonsillar exudates, tender anterior cervical LAD, absence of cough. Used to assess probability of GAS pharyngitis."
+  },
+  {
+    id:53, cat:"ENT", q:"First-line antibiotic treatment for strep throat is:",
+    opts:["Azithromycin","Amoxicillin or Penicillin V","Ciprofloxacin","Doxycycline"],
+    ans:1, exp:"Penicillin V or amoxicillin are first-line for GAS pharyngitis. Azithromycin or cephalosporins for penicillin-allergic patients."
+  },
+  {
+    id:54, cat:"Pulmonary", q:"What is the most common cause of community-acquired pneumonia (CAP)?",
+    opts:["Haemophilus influenzae","Mycoplasma pneumoniae","Streptococcus pneumoniae","Klebsiella pneumoniae"],
+    ans:2, exp:"Streptococcus pneumoniae is the most common cause of community-acquired pneumonia in all age groups."
+  },
+  {
+    id:55, cat:"Ophthalmology", q:"Which type of glaucoma is considered an ophthalmologic emergency?",
+    opts:["Open-angle glaucoma","Normal-tension glaucoma","Angle-closure glaucoma","Secondary glaucoma"],
+    ans:2, exp:"Acute angle-closure glaucoma is an emergency: sudden eye pain, headache, nausea, halos around lights, fixed mid-dilated pupil, elevated IOP. Requires immediate treatment."
+  },
+  {
+    id:56, cat:"Ophthalmology", q:"A 68-year-old male presents to the clinic for his annual wellness examination. He has a history of childhood asthma well-controlled with occasional use of combined ICS/LABA medication and no hospitalization for the last 5 years. He is otherwise in good health but he is worried about a visible whitish circle in his eyes. He denies recent changes in vision or eye pain. Examination is positive for a white-bluish-colored circumferential band in the cornea of both eyes that is separated from limbus by a space of clear cornea. The FNP would inform the patient that:<span class='img-note'>📷 Ver imagen en Pregunta 56 del documento PDF.</span>",
+    opts:["This is arcus senilis, a benign age-related finding in patients over 60","This requires urgent ophthalmology referral","This indicates uncontrolled glaucoma","This is a corneal ulcer requiring antibiotic treatment"],
+    ans:0, exp:"Arcus senilis = white-gray-bluish ring around corneal periphery separated from limbus by clear zone. Normal age-related finding in patients >60. If seen in patients <40, evaluate for hyperlipidemia."
+  },
+  {
+    id:57, cat:"Cardiology", q:"Which of the following is the best initial test for evaluating suspected heart failure?",
+    opts:["Chest X-ray","ECG","BNP (brain natriuretic peptide)","Echocardiogram"],
+    ans:2, exp:"BNP or NT-proBNP is the best initial screening test for heart failure. Elevated BNP (>100 pg/mL) supports HF diagnosis. Echocardiogram confirms and classifies HF."
+  },
+  {
+    id:58, cat:"Endocrine", q:"A1C of 6.8% indicates:",
+    opts:["Normal glucose metabolism","Pre-diabetes","Diabetes mellitus","Impaired fasting glucose only"],
+    ans:2, exp:"A1C diagnostic criteria: Normal <5.7%, Pre-diabetes 5.7-6.4%, Diabetes ≥6.5%. A1C of 6.8% = diabetes mellitus."
+  },
+  {
+    id:59, cat:"Pulmonary", q:"Which of the following is the hallmark presentation of a tension pneumothorax?",
+    opts:["Bilateral wheezing","Tracheal deviation away from affected side","Dullness to percussion on affected side","Productive cough with rusty sputum"],
+    ans:1, exp:"Tension pneumothorax: tracheal deviation AWAY from affected side, absent breath sounds, hyperresonance, hypotension, JVD. This is a life-threatening emergency."
+  },
+  {
+    id:60, cat:"Ophthalmology", q:"What fundoscopic finding is most characteristic of diabetic retinopathy?",
+    opts:["Papilledema","Copper wiring of arterioles","Microaneurysms and hard exudates","Drusen deposits"],
+    ans:2, exp:"Diabetic retinopathy: microaneurysms (earliest finding), hard exudates, dot-blot hemorrhages, cotton wool spots, neovascularization (proliferative). Drusen = macular degeneration."
+  },
+  {
+    id:61, cat:"Cardiology", q:"Beta blockers are contraindicated in which of the following conditions?",
+    opts:["Heart failure with reduced ejection fraction","Hypertension","Decompensated heart failure with acute bronchospasm","Stable angina"],
+    ans:2, exp:"Beta blockers are contraindicated in decompensated HF with acute bronchospasm (can worsen both conditions). They ARE indicated in stable HFrEF."
+  },
+  {
+    id:62, cat:"ENT", q:"A patient presents with unilateral hearing loss, and the Weber test lateralizes to the unaffected ear. What type of hearing loss does this suggest?",
+    opts:["Conductive hearing loss","Sensorineural hearing loss","Mixed hearing loss","Functional hearing loss"],
+    ans:1, exp:"Weber lateralizing to the UNAFFECTED ear = sensorineural hearing loss on the affected side. In conductive loss, Weber lateralizes TO the affected ear."
+  },
+  {
+    id:63, cat:"Pulmonary", q:"Walking pneumonia is most commonly associated with which organism?",
+    opts:["Streptococcus pneumoniae","Klebsiella pneumoniae","Mycoplasma pneumoniae","Legionella pneumophila"],
+    ans:2, exp:"Mycoplasma pneumoniae causes 'walking pneumonia' — atypical pneumonia with gradual onset, dry cough, low-grade fever, and patient appears well despite abnormal CXR."
+  },
+  {
+    id:64, cat:"Ophthalmology", q:"Based on the image below, this patient most likely has:<span class='img-note'>📷 Ver imagen en Pregunta 64 del documento PDF.</span>",
+    opts:["Viral conjunctivitis","Bacterial conjunctivitis","Allergic conjunctivitis","Subconjunctival hemorrhage"],
+    ans:1, exp:"Purulent (mucopurulent) discharge + erythema of conjunctiva = bacterial conjunctivitis."
+  },
+  {
+    id:65, cat:"Ophthalmology", q:"Based on the image below, identify the most likely diagnosis:<span class='img-note'>📷 Ver imagen en Pregunta 65 del documento PDF (imagen de párpado con lesión eritematosa).</span>",
+    opts:["Preseptal cellulitis","Chalazion","Hordeolum","Blepharitis"],
+    ans:0, exp:"The image shows periorbital erythema and swelling consistent with preseptal cellulitis."
+  },
+  {
+    id:66, cat:"Cardiology", q:"Abdominal aortic aneurysm (AAA) screening is recommended for:",
+    opts:["All men over age 50","Men aged 65-75 who have ever smoked","All women over age 65","Anyone with family history of heart disease"],
+    ans:1, exp:"USPSTF recommends one-time abdominal ultrasound screening for AAA in men aged 65-75 who have ever smoked."
+  },
+  {
+    id:67, cat:"Ophthalmology", q:"An older woman presents to the clinic in little Havana complaining of sudden right pain that started about 3 hours ago and doesn't seem to respond to usual pain medication (Acetaminophen). She has diplopia and sees glittering circles around lights. Refer to the picture below for gross eye examination. The FNP most likely:<span class='img-note'>📷 Ver imagen en Pregunta 67 del documento PDF.</span>",
+    opts:["Prescribes artificial tears and follows up in 1 week","Refers emergently to ophthalmology for suspected acute angle-closure glaucoma","Starts topical antibiotic drops for bacterial conjunctivitis","Prescribes oral analgesics and reassures the patient"],
+    ans:1, exp:"Sudden eye pain + halos around lights + fixed mid-dilated pupil = acute angle-closure glaucoma. This is an ophthalmologic EMERGENCY requiring immediate referral."
+  },
+  {
+    id:68, cat:"Pulmonary", q:"Egophony (E-to-A change) on auscultation suggests:",
+    opts:["Pneumothorax","Bronchitis","Lung consolidation/pneumonia","Pleural effusion"],
+    ans:2, exp:"Egophony (E-to-A change) = patient says 'E' but sounds like 'A' through stethoscope. Indicates lung consolidation (pneumonia)."
+  },
+  {
+    id:69, cat:"Cardiology", q:"Which murmur is best heard at the apex and radiates to the axilla?",
+    opts:["Aortic stenosis","Mitral regurgitation","Tricuspid regurgitation","Pulmonic stenosis"],
+    ans:1, exp:"Mitral regurgitation: holosystolic murmur best heard at apex, radiates to axilla. Aortic stenosis: crescendo-decrescendo murmur at right upper sternal border, radiates to carotids."
+  },
+  {
+    id:70, cat:"Endocrine", q:"Which of the following best describes Myxedema coma?",
+    opts:["A mild complication of hyperthyroidism","Severe decompensated hypothyroidism, a medical emergency","A common side effect of levothyroxine therapy","An autoimmune condition that causes weight loss"],
+    ans:1, exp:"Myxedema coma = severe decompensated hypothyroidism. Medical emergency with hypothermia, altered mental status, bradycardia, hypotension. High mortality without treatment."
+  },
+  {
+    id:71, cat:"Endocrine", q:"Which of the following is a classic triad presentation of pheochromocytoma?",
+    opts:["Weight gain, fatigue, and cold intolerance","Episodic headaches, sweating, and tachycardia","Polyuria, polydipsia, and polyphagia","Moon face, buffalo hump, and abdominal striae"],
+    ans:1, exp:"Pheochromocytoma classic triad: episodic headaches, diaphoresis (sweating), and tachycardia/palpitations. Also causes severe paroxysmal hypertension."
+  },
+  {
+    id:72, cat:"Ophthalmology", q:"Considering your knowledge about microvascular and macrovascular manifestations of Diabetes mellitus. Which of the following A, B, C, or D would correspond to a patient with diabetic retinopathy?<span class='img-note'>📷 Ver imágenes A, B, C, D en Pregunta 72 del documento PDF.</span>",
+    opts:["A","B","C","D"],
+    ans:1, exp:"Image B demonstrates findings consistent with diabetic retinopathy including microaneurysms, hard exudates, and hemorrhages."
+  },
+  {
+    id:73, cat:"Ophthalmology", q:"Which condition is characterized by painless, gradual loss of central vision and the presence of drusen on fundoscopic exam?",
+    opts:["Diabetic retinopathy","Open-angle glaucoma","Age-related macular degeneration","Cataracts"],
+    ans:2, exp:"Age-related macular degeneration (AMD): painless, gradual central vision loss + drusen (yellow deposits) on fundoscopy. Amsler grid shows distortion."
+  },
+  {
+    id:74, cat:"Ophthalmology", q:"The FNP would refer the patient below to ophthalmology with diagnosis of:<span class='img-note'>📷 Ver imagen en Pregunta 74 del documento PDF.</span>",
+    opts:["Entropion","Ectropion","Ptosis","Chalazion"],
+    ans:1, exp:"Ectropion = outward turning of the lower eyelid, exposing the conjunctiva. Common in elderly. Can cause tearing, dryness, and corneal exposure."
+  },
+  {
+    id:75, cat:"Ophthalmology", q:"The following patient carries a high risk for corneal abrasion, ulceration, and perforation and would be referred to ophthalmology promptly with diagnosis of:<span class='img-note'>📷 Ver imagen en Pregunta 75 del documento PDF.</span>",
+    opts:["Ectropion","Entropion","Hordeolum","Pterygium"],
+    ans:1, exp:"Entropion = inward turning of the eyelid with lashes rubbing against cornea (trichiasis). High risk for corneal abrasion, ulceration, and perforation."
+  },
+  {
+    id:76, cat:"Cardiology", q:"In hypertensive emergencies, the goal is to reduce blood pressure by no more than what percentage in the first hour?",
+    opts:["10%","25%","50%","Normalize blood pressure immediately"],
+    ans:1, exp:"In hypertensive emergency, reduce BP by no more than 25% in the first hour to prevent ischemic complications (stroke, MI, renal failure)."
+  },
+  {
+    id:77, cat:"Pulmonary", q:"Which of the following best describes Cheyne-Stokes respiration?",
+    opts:["Rapid, deep breathing pattern (Kussmaul breathing)","Alternating periods of apnea and progressively deeper then shallower breathing","Irregular breathing with random pauses","Sustained rapid shallow breathing"],
+    ans:1, exp:"Cheyne-Stokes: cyclic pattern of gradually increasing then decreasing respirations with periods of apnea. Seen in heart failure, stroke, and end-of-life."
+  },
+  {
+    id:78, cat:"Endocrine", q:"What is the most common cause of hyperthyroidism in the United States?",
+    opts:["Toxic multinodular goiter","Hashimoto's thyroiditis","Graves' disease","Thyroid adenoma"],
+    ans:2, exp:"Graves' disease is the most common cause of hyperthyroidism in the US. Autoimmune condition with TSH receptor antibodies causing diffuse thyroid stimulation."
+  },
+  {
+    id:79, cat:"Pulmonary", q:"Which acid-base disturbance would you expect in a patient with COPD exacerbation?",
+    opts:["Respiratory alkalosis","Metabolic acidosis","Respiratory acidosis","Metabolic alkalosis"],
+    ans:2, exp:"COPD exacerbation → CO2 retention (hypoventilation) → respiratory acidosis (↑ PaCO2, ↓ pH)."
+  },
+  {
+    id:80, cat:"Cardiology", q:"Dressler syndrome (post-MI pericarditis) typically presents:",
+    opts:["Within the first 24 hours after MI","2-8 weeks after MI with fever, pleuritic chest pain, and pericardial friction rub","Immediately during the MI event","6-12 months after MI"],
+    ans:1, exp:"Dressler syndrome: autoimmune pericarditis occurring 2-8 weeks post-MI. Presents with fever, pleuritic chest pain, pericardial friction rub, and pericardial effusion."
+  },
+  {
+    id:81, cat:"Ophthalmology", q:"Based on the image below, management includes: (Select all that apply)<span class='img-note'>📷 Ver imagen en Pregunta 81 del documento PDF.</span>",
+    opts:["Immediate surgical removal","Artificial tears and lubricants","Sunglasses/UV protection","Reassurance and monitoring","Referral to ophthalmology if growth encroaches on visual axis","Topical antibiotics for 7 days"],
+    ans:[1,2,3,4], multi:true, exp:"Pterygium management: artificial tears, UV protection (sunglasses), monitoring, and ophthalmology referral if it encroaches on visual axis. Surgery only for significant cases. Not an infection → no antibiotics."
+  },
+  {
+    id:82, cat:"ENT", q:"Management of strep throat includes: (Select all that apply)",
+    opts:["Watchful waiting for 7 days","Oral corticosteroids","PCN-V (penicillin V) or amoxicillin","Analgesics (acetaminophen or ibuprofen)","Fluids and salt-water gargles","Surgical tonsillectomy"],
+    ans:[2,3,4,5], multi:true, exp:"Strep throat management: PCN-V (antibiotic of choice), analgesics (acetaminophen/ibuprofen), fluids, and salt-water gargles for symptomatic relief."
+  }
+];
+
+// ============ STATE ============
+let userAnswers = {};
+let filteredIds = questions.map(q => q.id);
+let currentIdx = 0;
+let _multiSel = {};
+
+// ============ INIT ============
+function init() {
+  // Populate category filter
+  const cats = [...new Set(questions.map(q => q.cat))].sort();
+  const sel = document.getElementById('cat-filter');
+  cats.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
+  
+  // Load saved answers from localStorage
+  try {
+    const saved = localStorage.getItem('midterm_quiz_answers');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Restore, converting arrays back
+      Object.keys(parsed).forEach(k => { userAnswers[parseInt(k)] = parsed[k]; });
+    }
+  } catch(e) {}
+  
+  renderQuestion();
+  updateStats();
+  setupSwipe();
+  
+  // Remove swipe hint after shown once
+  setTimeout(() => {
+    const h = document.getElementById('swipe-hint');
+    if (h) h.remove();
+  }, 3500);
+}
+
+function save() {
+  try { localStorage.setItem('midterm_quiz_answers', JSON.stringify(userAnswers)); } catch(e) {}
+}
+
+// ============ RENDER ============
+function renderQuestion() {
+  const area = document.getElementById('quiz-area');
+  
+  if (filteredIds.length === 0) {
+    area.innerHTML = `<div class="empty-state">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M8 15h8M9 9h.01M15 9h.01"/></svg>
+      <p>No questions match this filter.</p>
+    </div>`;
+    document.getElementById('nav-counter').textContent = '0 / 0';
+    return;
+  }
+  
+  const qId = filteredIds[currentIdx];
+  const q = questions.find(x => x.id === qId);
+  const ua = userAnswers[q.id];
+  const answered = ua !== undefined;
+  const letters = 'ABCDEFGHIJ';
+  
+  let optsHtml = '';
+  q.opts.forEach((opt, i) => {
+    let cls = 'opt';
+    if (answered) {
+      cls += ' disabled';
+      if (q.multi) {
+        const correctSet = new Set(q.ans);
+        const userSet = new Set(ua);
+        if (correctSet.has(i)) cls += ' is-correct';
+        else if (userSet.has(i)) cls += ' is-wrong';
+      } else {
+        if (i === q.ans) cls += ' is-correct';
+        else if (i === ua) cls += ' is-wrong';
+      }
+    } else if (q.multi && _multiSel[q.id] && _multiSel[q.id].has(i)) {
+      cls += ' selected';
+    }
+    
+    const svgCheck = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    const svgX = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 3l6 6M9 3l-6 6" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>`;
+    let icon = svgCheck;
+    if (cls.includes('is-wrong')) icon = svgX;
+    
+    optsHtml += `
+      <div class="${cls}" onclick="selectAnswer(${q.id},${i},${q.multi||false})">
+        <div class="marker">${icon}</div>
+        <div class="opt-text"><span style="color:var(--text-3);font-weight:600;margin-right:6px;">${letters[i]}.</span>${opt}</div>
+      </div>`;
+  });
+  
+  // Multi-select submit button
+  let multiBtn = '';
+  if (q.multi && !answered) {
+    const hasSel = _multiSel[q.id] && _multiSel[q.id].size > 0;
+    multiBtn = `<button class="multi-submit" onclick="submitMulti(${q.id})" ${hasSel?'':'disabled'}>Submit Answer</button>`;
+  }
+  
+  let cardCls = 'q-card';
+  if (answered) {
+    if (q.multi) {
+      const correct = JSON.stringify([...q.ans].sort()) === JSON.stringify([...ua].sort());
+      cardCls += correct ? ' answered-correct' : ' answered-wrong';
+    } else {
+      cardCls += ua === q.ans ? ' answered-correct' : ' answered-wrong';
+    }
+  }
+  
+  area.innerHTML = `
+    <div class="q-counter">
+      <span class="current-pos">Question ${currentIdx + 1} of ${filteredIds.length}</span>
+      <span>${Object.keys(userAnswers).length} / ${questions.length} answered</span>
+    </div>
+    <div class="${cardCls}" id="q-card-active">
+      <div class="q-badge">
+        <span class="q-id">Q${q.id}</span>
+        <span class="q-cat">${q.cat}</span>
+        ${q.multi ? '<span class="q-multi">MULTI-SELECT</span>' : ''}
+      </div>
+      <div class="q-text">${q.q}</div>
+      <div class="options" id="opts-${q.id}">${optsHtml}</div>
+      ${multiBtn}
+      <div class="explanation ${answered ? 'show' : ''}">${q.exp || ''}</div>
+    </div>`;
+  
+  document.getElementById('nav-counter').textContent = `${currentIdx + 1} / ${filteredIds.length}`;
+  document.getElementById('nav-prev').disabled = currentIdx === 0;
+  document.getElementById('nav-next').disabled = currentIdx === filteredIds.length - 1;
+}
+
+function selectAnswer(qId, optIdx, multi) {
+  if (userAnswers[qId] !== undefined) return;
+  
+  if (multi) {
+    if (!_multiSel[qId]) _multiSel[qId] = new Set();
+    const sel = _multiSel[qId];
+    if (sel.has(optIdx)) sel.delete(optIdx); else sel.add(optIdx);
+    renderQuestion(); // re-render to show selection state
+    return;
+  }
+  
+  userAnswers[qId] = optIdx;
+  save();
+  updateStats();
+  renderQuestion();
+}
+
+function submitMulti(qId) {
+  if (!_multiSel[qId] || _multiSel[qId].size === 0) return;
+  userAnswers[qId] = [..._multiSel[qId]];
+  delete _multiSel[qId];
+  save();
+  updateStats();
+  renderQuestion();
+}
+
+function nav(dir) {
+  // Auto-submit multi if leaving
+  const qId = filteredIds[currentIdx];
+  const q = questions.find(x => x.id === qId);
+  if (q.multi && _multiSel[qId] && _multiSel[qId].size > 0 && userAnswers[qId] === undefined) {
+    submitMulti(qId);
+  }
+  
+  const newIdx = currentIdx + dir;
+  if (newIdx < 0 || newIdx >= filteredIds.length) return;
+  
+  currentIdx = newIdx;
+  renderQuestion();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ============ STATS ============
+function updateStats() {
+  let answered = 0, correct = 0, wrong = 0;
+  questions.forEach(q => {
+    if (userAnswers[q.id] !== undefined) {
+      answered++;
+      if (q.multi) {
+        const c = JSON.stringify([...q.ans].sort()) === JSON.stringify([...userAnswers[q.id]].sort());
+        if (c) correct++; else wrong++;
+      } else {
+        if (userAnswers[q.id] === q.ans) correct++; else wrong++;
+      }
+    }
+  });
+  
+  document.getElementById('s-correct').textContent = correct;
+  document.getElementById('s-wrong').textContent = wrong;
+  document.getElementById('s-pct').textContent = answered ? Math.round(correct/answered*100)+'%' : '0%';
+  document.getElementById('progress').style.width = (answered/questions.length*100)+'%';
+}
+
+// ============ FILTERS ============
+function setActiveChip(id) {
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  if (id) document.getElementById(id).classList.add('active');
+}
+
+function filterQ(type) {
+  if (type === 'all') { filteredIds = questions.map(q => q.id); setActiveChip('chip-all'); }
+  else if (type === 'wrong') {
+    filteredIds = questions.filter(q => {
+      if (userAnswers[q.id] === undefined) return false;
+      if (q.multi) return JSON.stringify([...q.ans].sort()) !== JSON.stringify([...userAnswers[q.id]].sort());
+      return userAnswers[q.id] !== q.ans;
+    }).map(q => q.id);
+    setActiveChip('chip-wrong');
+  } else if (type === 'unanswered') {
+    filteredIds = questions.filter(q => userAnswers[q.id] === undefined).map(q => q.id);
+    setActiveChip('chip-unanswered');
+  }
+  document.getElementById('cat-filter').value = 'all';
+  currentIdx = 0;
+  renderQuestion();
+}
+
+function filterByCat(cat) {
+  setActiveChip('chip-all');
+  filteredIds = cat === 'all' ? questions.map(q => q.id) : questions.filter(q => q.cat === cat).map(q => q.id);
+  currentIdx = 0;
+  renderQuestion();
+}
+
+function shuffleQ() {
+  for (let i = filteredIds.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [filteredIds[i], filteredIds[j]] = [filteredIds[j], filteredIds[i]];
+  }
+  currentIdx = 0;
+  renderQuestion();
+}
+
+function resetQuiz() {
+  if (!confirm('Reset all answers? This cannot be undone.')) return;
+  userAnswers = {};
+  _multiSel = {};
+  try { localStorage.removeItem('midterm_quiz_answers'); } catch(e) {}
+  filteredIds = questions.map(q => q.id);
+  currentIdx = 0;
+  document.getElementById('cat-filter').value = 'all';
+  setActiveChip('chip-all');
+  updateStats();
+  renderQuestion();
+}
+
+// ============ GRID ============
+function openGrid() {
+  const grid = document.getElementById('grid-nav');
+  grid.innerHTML = filteredIds.map((id, idx) => {
+    let cls = 'grid-cell';
+    if (idx === currentIdx) cls += ' current';
+    const q = questions.find(x => x.id === id);
+    if (userAnswers[id] !== undefined) {
+      if (q.multi) {
+        const c = JSON.stringify([...q.ans].sort()) === JSON.stringify([...userAnswers[id]].sort());
+        cls += c ? ' done-correct' : ' done-wrong';
+      } else {
+        cls += userAnswers[id] === q.ans ? ' done-correct' : ' done-wrong';
+      }
+    }
+    return `<div class="${cls}" onclick="jumpTo(${idx})">${id}</div>`;
+  }).join('');
+  document.getElementById('grid-overlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeGrid(e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById('grid-overlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+function jumpTo(idx) {
+  currentIdx = idx;
+  renderQuestion();
+  closeGrid();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ============ SWIPE ============
+function setupSwipe() {
+  let startX = 0, startY = 0, swiping = false;
+  const threshold = 50;
+  
+  document.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    swiping = true;
+  }, { passive: true });
+  
+  document.addEventListener('touchend', e => {
+    if (!swiping) return;
+    swiping = false;
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = e.changedTouches[0].clientY - startY;
+    
+    // Only trigger horizontal swipe if horizontal distance > vertical
+    if (Math.abs(dx) > threshold && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      if (dx < 0) nav(1);  // swipe left = next
+      else nav(-1);         // swipe right = prev
+    }
+  }, { passive: true });
+}
+
+// ============ KEYBOARD ============
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowLeft') nav(-1);
+  if (e.key === 'ArrowRight') nav(1);
+});
+
+init();
+</script>
+</body>
+</html>
